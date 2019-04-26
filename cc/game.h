@@ -24,6 +24,8 @@
 #include "cc/color.h"
 #include "cc/constants.h"
 #include "cc/coord.h"
+#include "cc/inline_vector.h"
+#include "cc/player.h"
 #include "cc/position.h"
 
 namespace minigo {
@@ -36,7 +38,7 @@ class Game {
     float resign_threshold = -0.95;
 
     // We use a separate resign_enabled flag instead of setting the
-    // resign_threshold to -1 for games where resignation is diabled. This
+    // resign_threshold to -1 for games where resignation is disabled. This
     // enables us to report games where the eventual winner would have
     // incorrectly resigned early, had resignations been enabled.
     bool resign_enabled = true;
@@ -82,9 +84,20 @@ class Game {
 
   static std::string FormatScore(float score);
 
-  Game(std::string black_name, std::string white_name, const Options& options);
+  Game(const Options& options);
+
+  // Add a player to the game.
+  // Exactly one or two players must be added before the first call to NewGame.
+  // If one player is added, it will play both black & white.
+  // If two players are added, the first will play as black, the second as
+  // white.
+  void AddPlayer(std::unique_ptr<Player> player);
 
   void NewGame();
+
+  Move SuggestMove();
+
+  void PlayMove(Coord c);
 
   void AddComment(const std::string& comment);
 
@@ -119,8 +132,14 @@ class Game {
   bool FindBleakestMove(int* move, float* q) const;
 
   const Options& options() const { return options_; }
-  const std::string& black_name() const { return black_name_; }
-  const std::string& white_name() const { return white_name_; }
+
+  const Player* black() const { return players_.front().get(); }
+  const Player* white() const { return players_.back().get(); }
+
+  // TODO(tommadams): remove black_name & white name
+  const std::string& black_name() const { return black()->name(); }
+  const std::string& white_name() const { return white()->name(); }
+
   bool game_over() const { return game_over_; }
   GameOverReason game_over_reason() const {
     MG_CHECK(game_over());
@@ -145,9 +164,10 @@ class Game {
   const std::vector<std::unique_ptr<Move>>& moves() const { return moves_; }
 
  private:
+  inline_vector<std::unique_ptr<Player>, 2> players_;
+
   const Options options_;
-  const std::string black_name_;
-  const std::string white_name_;
+  bool game_started_ = false;
   bool game_over_ = false;
   GameOverReason game_over_reason_;
   float result_;

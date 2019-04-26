@@ -32,16 +32,20 @@ std::string Game::FormatScore(float score) {
   return absl::StrFormat("%c+%.1f", score > 0 ? 'B' : 'W', std::abs(score));
 }
 
-Game::Game(std::string black_name, std::string white_name,
-           const Game::Options& options)
-    : options_(options),
-      black_name_(std::move(black_name)),
-      white_name_(std::move(white_name)) {
+Game::Game(const Game::Options& options) : options_(options) {
   MG_CHECK(options_.resign_threshold < 0);
 }
 
+void Game::AddPlayer(std::unique_ptr<Player> player) {
+  MG_CHECK(players_.size() < 2);
+  MG_CHECK(!game_started_);
+  players_.push_back(std::move(player));
+}
+
 void Game::NewGame() {
+  MG_CHECK(!players_.empty());
   game_over_ = false;
+  game_started_ = true;
   moves_.clear();
   comment_.clear();
 }
