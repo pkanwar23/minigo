@@ -64,6 +64,12 @@ flags.DEFINE_boolean('parallel_post_train', False,
 
 flags.DEFINE_string('engine', 'tf', 'The engine to use for selfplay.')
 
+flags.DEFINE_string('tpu_name', None, 'TPU name.')
+
+flags.DEFINE_bool('verbose', False,
+                  'If true, log all subprocess output to stderr in addition '
+                  'to the logfiles.')
+
 FLAGS = flags.FLAGS
 
 
@@ -205,7 +211,7 @@ async def run(*cmd):
     RuntimeError: if the command returns a non-zero result.
   """
 
-  stdout = await checked_run(*cmd)
+  stdout = await checked_run(*cmd, verbose=FLAGS.verbose)
 
   log_path = os.path.join(FLAGS.base_dir, get_cmd_name(cmd) + '.log')
   with gfile.Open(log_path, 'a') as f:
@@ -249,7 +255,7 @@ async def selfplay(state, flagfile='selfplay'):
       '--output_dir={}'.format(output_dir),
       '--holdout_dir={}'.format(holdout_dir),
       '--seed={}'.format(state.seed))
-  result = '\n'.join(lines[-6:])
+  result = '\n'.join(lines[-5:])
   logging.info(result)
   stats = parse_win_stats_table(result, 1)[0]
   num_games = stats.total_wins
@@ -291,6 +297,7 @@ async def train(state, tf_records):
       '--work_dir={}'.format(fsdb.working_dir()),
       '--export_path={}'.format(model_path),
       '--training_seed={}'.format(state.seed),
+      '--tpu_name={}'.format(FLAGS.tpu_name),
       '--freeze=true')
   # Append the time elapsed from when the RL was started to when this model
   # was trained. GCS files are immutable, so we have to do the append manually.
@@ -425,6 +432,10 @@ def rl_loop():
 
 def main(unused_argv):
   """Run the reinforcement learning loop."""
+
+  if FLAGS.engine.startswith('tpu'):
+    assert FLAGS.tpu_name
+    FLAGS.engine += ':' + FLAGS.tpu_name
 
   print('Wiping dir %s' % FLAGS.base_dir, flush=True)
   try:
