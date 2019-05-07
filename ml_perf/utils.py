@@ -63,7 +63,7 @@ async def checked_run(*cmd):
       chunk = await p.stdout.read(16 * 1024)
       if not chunk:
         break
-      #sys.stderr.write(chunk.decode('utf-8'))
+      sys.stderr.write(chunk.decode('utf-8'))
       chunks.append(chunk)
 
     # Wait for the process to finish, check it was successful & build stdout.
