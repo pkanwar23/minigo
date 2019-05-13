@@ -93,7 +93,7 @@ flags.DEFINE_string(
     'when creating the Cloud TPU, or a grpc://ip.address.of.tpu:8470 url.')
 
 flags.DEFINE_integer(
-    'num_tpu_cores', default=8,
+    'num_tpu_cores', default=32,
     help=('Number of TPU cores. For a single TPU device, this is 8 because each'
           ' TPU has 4 chips each with 2 cores.'))
 
