@@ -553,7 +553,7 @@ def _get_nontpu_estimator():
 
 def _get_tpu_estimator():
     tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(
-        FLAGS.tpu_name, zone=None, project=None)
+        FLAGS.tpu_name, zone="europe-west4-a", project="tf-benchmark-dashboard")
     tpu_grpc_url = tpu_cluster_resolver.get_master()
 
     run_config = tpu_config.RunConfig(
@@ -636,7 +636,7 @@ def freeze_graph_tpu(model_path):
         tpu_grpc_url = FLAGS.tpu_name
     else:
         tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(
-            FLAGS.tpu_name, zone=None, project=None)
+            FLAGS.tpu_name, zone="europe-west4-a", project="tf-benchmark-dashboard")
         tpu_grpc_url = tpu_cluster_resolver.get_master()
     sess = tf.Session(tpu_grpc_url)
 
